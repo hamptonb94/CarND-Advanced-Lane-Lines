@@ -21,6 +21,13 @@ def imagePipeline(image, fileName=None):
     
     # birds-eye
     
+    # combine for final result
+    imgFinal = UtilMask.weighted_img(imgMasked, imgUD)
+    if fileName:
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-5-final.jpg"), imgFinal)
+    
+    return imgFinal
+    
 
 def makeNewDir(dir):
     if not os.path.isdir(dir):
@@ -45,10 +52,15 @@ def processImages():
         
         imagePipeline(image, fileName)
         
+from moviepy.editor import VideoFileClip
 
 def processMovie1():
     print("Movie 1")
+    white_output = 'video_output.mp4'
+    clip1 = VideoFileClip("challenge_video.mp4")
+    white_clip = clip1.fl_image(imagePipeline) #NOTE: this function expects color images!!
+    white_clip.write_videofile(white_output, audio=False)
 
 
 processImages()
-processMovie1()
+#processMovie1()

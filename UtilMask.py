@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import cv2
 import glob
@@ -45,9 +46,9 @@ def region_of_interest(img):
     #defining a 3 channel or 1 channel color to fill the mask with depending on the input image
     if len(img.shape) > 2:
         channel_count = img.shape[2]  # i.e. 3 or 4 depending on your image
-        ignore_mask_color = (1,) * channel_count
+        ignore_mask_color = (255,) * channel_count
     else:
-        ignore_mask_color = 1
+        ignore_mask_color = 255
         
     #filling pixels inside the polygon defined by "vertices" with the fill color    
     cv2.fillPoly(mask, vertices, ignore_mask_color)
@@ -55,6 +56,20 @@ def region_of_interest(img):
     #returning the image only where mask pixels are nonzero
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
+
+def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
+    """
+    `img` is the output of the hough_lines(), An image with lines drawn on it.
+    Should be a blank image (all black) with lines drawn on it.
+    
+    `initial_img` should be the image before any processing.
+    
+    The result image is computed as follows:
+    
+    initial_img * α + img * β + λ
+    NOTE: initial_img and img must be the same shape!
+    """
+    return cv2.addWeighted(initial_img, α, img, β, λ)
 
 def maskPipeline(image, ksize=5, \
                     abs_thresh=(50, 200), \
@@ -97,11 +112,11 @@ def maskPipeline(image, ksize=5, \
     # color mask
     hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
     s_channel = hls[:,:,2]
-    mask_col = np.zeros_like(s_channel)
-    mask_col[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+    mask_col = np.zeros_like(s_channel, dtype=np.uint8)
+    mask_col[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 255
     
-    combined = np.zeros_like(mask_dir)
-    combined[((abs_mask_x == 1) & (abs_mask_y == 1)) | ((mag_mask == 1) & (mask_dir == 1))] = 1
+    combined = np.zeros_like(mask_dir, dtype=np.uint8)
+    combined[((abs_mask_x == 1) & (abs_mask_y == 1)) | ((mag_mask == 1) & (mask_dir == 1))] = 255
     
     # mash everything together
     color_binary = np.dstack(( np.zeros_like(combined), combined, mask_col))
@@ -112,11 +127,15 @@ def maskPipeline(image, ksize=5, \
     
 
 if __name__ == '__main__':
-    names = glob.glob('test_images/*.jpg')
-    for name in names:
-        if 'mask' in name: continue
-        print(name)
-        image = mpimg.imread(name)
+    fileNames = os.listdir("test_images/")
+    for fileName in fileNames:
+        if 'jpg' not in fileName:
+            continue
+        print("Processing: ", fileName)
+        fullName = os.path.join("test_images",fileName)
+        image = mpimg.imread(fullName)
         result = maskPipeline(image)
-        mpimg.imsave(name+",mask.jpg", result)
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+",mask.jpg"), result)
+        final = weighted_img(result, image)
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+",final.jpg"), final)
 
