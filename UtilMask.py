@@ -57,26 +57,44 @@ def region_of_interest(img):
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
 
-def topDown(img):
-    width  = img.shape[1] # x
-    height = img.shape[0] # y
+class Perspective:
+    def __init__(self):
+        self.isSetup = False
     
-    tops1 = [[550, 450], [ 730, 450] ] # top    left,right
-    bots1 = [[ 50, 646], [1230, 646] ] # bottom left,right
+    def calcTransform(self, image):
+        width  = image.shape[1] # x
+        height = image.shape[0] # y
+        self.shape = (width, height)
+        
+        # staring points
+        tops1 = [[550, 450], [ 730, 450] ] # top    left,right
+        bots1 = [[ 50, 646], [1230, 646] ] # bottom left,right
+        
+        # new point location in top-down image
+        tops2 = [[300, 0],      [980, 0]      ] # top    left,right
+        bots2 = [[300, height], [980, height] ] # bottom left,right
+        
+        # define transform matrix
+        source = np.float32([tops1[0], tops1[1], bots1[1], bots1[0]]) # circular order
+        dest   = np.float32([tops2[0], tops2[1], bots2[1], bots2[0]]) # circular order
     
-    tops2 = [[300, 0],      [980, 0]      ] # top    left,right
-    bots2 = [[300, height], [980, height] ] # bottom left,right
+        self.warpMat    = cv2.getPerspectiveTransform(source, dest)
+        self.warpMatInv = cv2.getPerspectiveTransform(dest,   source)
+        self.isSetup = True
     
-    source = np.float32([tops1[0], tops1[1], bots1[1], bots1[0]]) # circular order
-    dest   = np.float32([tops2[0], tops2[1], bots2[1], bots2[0]]) # circular order
-    
-    warpMat    = cv2.getPerspectiveTransform(source, dest)
-    topDownImg = cv2.warpPerspective(img, warpMat, (width, height), flags=cv2.INTER_LINEAR)
-    
-    # crop left and right extremes
-    #topDownImg = topDownImg[0:height, 190:width-190]
-    
-    return topDownImg
+    def topDown(self, image):
+        if not self.isSetup:
+            self.calcTransform(image)
+        
+        topDownImg = cv2.warpPerspective(image, self.warpMat, self.shape, flags=cv2.INTER_LINEAR)
+        return topDownImg
+        
+    def topDownInv(self, image):
+        if not self.isSetup:
+            self.calcTransform(image)
+        
+        topDownImgInv = cv2.warpPerspective(image, self.warpMatInv, self.shape, flags=cv2.INTER_LINEAR)
+        return topDownImgInv
     
 
 def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
