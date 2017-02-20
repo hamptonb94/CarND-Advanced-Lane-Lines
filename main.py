@@ -11,6 +11,9 @@ import UtilMask
 cam = UtilCamera.Camera()
 
 def imagePipeline(image, fileName=None):
+    if fileName:
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName), image)
+    
     imgUD = cam.undistort(image)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-0-udist.jpg"), imgUD)
@@ -20,9 +23,14 @@ def imagePipeline(image, fileName=None):
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-1-mask.jpg"), imgMasked)
     
     # birds-eye
-    topDown = UtilMask.topDown(image)
+    topDown = UtilMask.topDown(imgUD)
     if fileName:
-        mpimg.imsave(os.path.join("test_images/td/", fileName+"-9-topdwn.jpg"), topDown)
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2-topdwn.jpg"), topDown)
+    
+    # masking
+    imgTopMasked = UtilMask.maskPipeline(topDown)
+    if fileName:
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-3-mask.jpg"), imgTopMasked)
     
     # combine for final result
     imgFinal = UtilMask.weighted_img(imgMasked, imgUD)
@@ -51,8 +59,6 @@ def processImages():
         print("Processing: ", fileName)
         fullName = os.path.join("test_images",fileName)
         image = mpimg.imread(fullName)
-        mpimg.imsave(os.path.join("test_images/outputs/", fileName), image)
-        
         imagePipeline(image, fileName)
         
 from moviepy.editor import VideoFileClip

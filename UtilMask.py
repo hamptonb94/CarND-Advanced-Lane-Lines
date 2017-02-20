@@ -133,19 +133,21 @@ def maskPipeline(image, ksize=5, \
     
     # color mask
     hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    l_channel = hls[:,:,1]
     s_channel = hls[:,:,2]
-    mask_col = np.zeros_like(s_channel, dtype=np.uint8)
-    mask_col[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 255
+    mask_color = np.zeros_like(s_channel, dtype=np.uint8)
+    mask_color[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1]) & (l_channel > 50)] = 255
+    mask_color[(l_channel > 220)] = 255
     
     combined = np.zeros_like(mask_dir, dtype=np.uint8)
     combined[((abs_mask_x == 1) & (abs_mask_y == 1)) | ((mag_mask == 1) & (mask_dir == 1))] = 255
     
     # mash everything together
-    color_binary = np.dstack(( np.zeros_like(combined), combined, mask_col))
+    color_binary = np.dstack(( np.zeros_like(combined), combined, mask_color))
     
-    masked = region_of_interest(color_binary)
+    #masked = region_of_interest(color_binary)
     
-    return masked
+    return color_binary
     
 
 if __name__ == '__main__':
