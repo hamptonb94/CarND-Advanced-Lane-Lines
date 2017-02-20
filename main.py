@@ -7,6 +7,7 @@ import matplotlib.image as mpimg
 
 import UtilCamera
 import UtilMask
+import UtilLines
 
 cam = UtilCamera.Camera()
 
@@ -31,6 +32,11 @@ def imagePipeline(image, fileName=None):
     imgTopMasked = UtilMask.maskPipeline(topDown)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-3-mask.jpg"), imgTopMasked)
+    
+    topBinary = UtilMask.binaryImg(imgTopMasked)
+    searched  = UtilLines.blindSearch(topBinary)
+    if fileName:
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-4-search.jpg"), searched)
     
     # combine for final result
     imgFinal = UtilMask.weighted_img(imgMasked, imgUD)
