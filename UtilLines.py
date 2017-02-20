@@ -29,8 +29,8 @@ class LaneLines:
         return newwarp
     
     def addLaneInfo(self, image):
-        cv2.putText(image, 'Curvature radius  : {:8.1f}m'.format(self.curve_radius), (20,  60), self.fontFace, 1.5, self.fontColor, 2)
-        cv2.putText(image, 'Offset from center: {:4.1f}m'.format(self.laneOffset  ), (20, 110), self.fontFace, 1.5, self.fontColor, 2)
+        cv2.putText(image, 'Curvature radius  : {:5.2f} km'.format(self.curveRadKm), (20,  60), self.fontFace, 1.5, self.fontColor, 2)
+        cv2.putText(image, 'Offset from center: {:5.2f} m '.format(self.laneOffset  ), (20, 110), self.fontFace, 1.5, self.fontColor, 2)
         return
 
     
@@ -132,8 +132,8 @@ class LaneLines:
     
         # calculate weighted average
         curveTot = lft_curverad*len(lftx) + rgt_curverad*len(rgtx)
-        self.curve_radius = curveTot/(len(lftx) + len(rgtx))
+        self.curveRadKm = curveTot/(len(lftx) + len(rgtx))/1000
         
-        print("  --  Avg Radius = {0:8.1f} m,  Lane Width = {1:.1f} m,   Lane Offset = {2:.1f} m".format(self.curve_radius, self.laneWidth, self.laneOffset))
+        print("  --  Avg Radius = {0:6.2f} km,  Lane Width = {1:.1f} m,   Lane Offset = {2:.1f} m".format(self.curveRadKm, self.laneWidth, self.laneOffset))
     
         return out_img
