@@ -20,6 +20,9 @@ def imagePipeline(image, fileName=None):
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-1-mask.jpg"), imgMasked)
     
     # birds-eye
+    topDown = UtilMask.topDown(image)
+    if fileName:
+        mpimg.imsave(os.path.join("test_images/td/", fileName+"-9-topdwn.jpg"), topDown)
     
     # combine for final result
     imgFinal = UtilMask.weighted_img(imgMasked, imgUD)

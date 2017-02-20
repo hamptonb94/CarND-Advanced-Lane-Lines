@@ -57,6 +57,28 @@ def region_of_interest(img):
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
 
+def topDown(img):
+    width  = img.shape[1] # x
+    height = img.shape[0] # y
+    
+    tops1 = [[550, 450], [ 730, 450] ] # top    left,right
+    bots1 = [[ 50, 646], [1230, 646] ] # bottom left,right
+    
+    tops2 = [[300, 0],      [980, 0]      ] # top    left,right
+    bots2 = [[300, height], [980, height] ] # bottom left,right
+    
+    source = np.float32([tops1[0], tops1[1], bots1[1], bots1[0]]) # circular order
+    dest   = np.float32([tops2[0], tops2[1], bots2[1], bots2[0]]) # circular order
+    
+    warpMat    = cv2.getPerspectiveTransform(source, dest)
+    topDownImg = cv2.warpPerspective(img, warpMat, (width, height), flags=cv2.INTER_LINEAR)
+    
+    # crop left and right extremes
+    #topDownImg = topDownImg[0:height, 190:width-190]
+    
+    return topDownImg
+    
+
 def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     `img` is the output of the hough_lines(), An image with lines drawn on it.
