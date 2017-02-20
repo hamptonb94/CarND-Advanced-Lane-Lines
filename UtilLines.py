@@ -99,7 +99,15 @@ class LaneLines:
         self.ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
         self.lft_fitx = lft_fit[0]*self.ploty**2 + lft_fit[1]*self.ploty + lft_fit[2]
         self.rgt_fitx = rgt_fit[0]*self.ploty**2 + rgt_fit[1]*self.ploty + rgt_fit[2]
-
+        
+        midPointPx   = 1280.0/2.0
+        laneWidthPx  = self.rgt_fitx[-1] - self.lft_fitx[-1]
+        laneCenterPx = self.lft_fitx[-1] + laneWidthPx/2.0
+        laneOffsetPx = laneCenterPx - midPointPx
+        
+        self.laneWidth  = laneWidthPx  *xm_per_pix
+        self.laneOffset = laneOffsetPx *xm_per_pix
+        
         out_img[nonzeroy[lft_lane_inds], nonzerox[lft_lane_inds]] = [255, 0, 0]
         out_img[nonzeroy[rgt_lane_inds], nonzerox[rgt_lane_inds]] = [0, 0, 255]
     
@@ -111,12 +119,12 @@ class LaneLines:
         lft_curverad = ((1 + (2*lft_fit_cr[0]*y_eval*ym_per_pix + lft_fit_cr[1])**2)**1.5) / np.absolute(2*lft_fit_cr[0])
         rgt_curverad = ((1 + (2*rgt_fit_cr[0]*y_eval*ym_per_pix + rgt_fit_cr[1])**2)**1.5) / np.absolute(2*rgt_fit_cr[0])
         # Now our radius of curvature is in meters
-        print(lft_curverad, 'm', rgt_curverad, 'm')
+        #print(lft_curverad, 'm', rgt_curverad, 'm')
     
         # calculate weighted average
         curveTot = lft_curverad*len(lftx) + rgt_curverad*len(rgtx)
         curve_radius = curveTot/(len(lftx) + len(rgtx))
-    
-        print("--Avg Radius = ", curve_radius, " m")
+        
+        print("  --  Avg Radius = {0:8.1f} m,  Lane Width = {1:.1f} m,   Lane Offset = {2:.1f} m".format(curve_radius, self.laneWidth, self.laneOffset))
     
         return out_img
