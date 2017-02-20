@@ -68,7 +68,7 @@ class Perspective:
         
         # staring points
         tops1 = [[550, 450], [ 730, 450] ] # top    left,right
-        bots1 = [[  0, 680], [1230, 680] ] # bottom left,right
+        bots1 = [[  0, 680], [1280, 680] ] # bottom left,right
         
         # new point location in top-down image
         tops2 = [[275, 0],      [1005, 0]      ] # top    left,right
