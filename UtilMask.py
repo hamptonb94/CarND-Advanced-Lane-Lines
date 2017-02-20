@@ -93,11 +93,17 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
+def binaryImg(image):
+    """Extract valid pixels.  Final image will be 1-color"""
+    # For now the "blue" channel has the best information from the maskPipeline
+    outImg = image[:,:,2]
+    return outImg
+
 def maskPipeline(image, ksize=5, \
                     abs_thresh=(50, 200), \
                     mag_thresh=(80, 200), \
                     dir_thresh=(0.7, 1.3), \
-                    s_thresh  =(170, 255)):
+                    s_thresh  =(140, 255)):
     
     """Compute total image mask based on Sobel gradients and color values"""
     
@@ -136,7 +142,7 @@ def maskPipeline(image, ksize=5, \
     l_channel = hls[:,:,1]
     s_channel = hls[:,:,2]
     mask_color = np.zeros_like(s_channel, dtype=np.uint8)
-    mask_color[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1]) & (l_channel > 50)] = 255
+    mask_color[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1]) & (l_channel > 30)] = 255
     mask_color[(l_channel > 220)] = 255
     
     combined = np.zeros_like(mask_dir, dtype=np.uint8)
