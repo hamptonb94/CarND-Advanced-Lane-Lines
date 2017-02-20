@@ -10,6 +10,7 @@ import UtilMask
 import UtilLines
 
 cam = UtilCamera.Camera()
+perspective = UtilMask.Perspective()
 
 def imagePipeline(image, fileName=None):
     if fileName:
@@ -24,7 +25,7 @@ def imagePipeline(image, fileName=None):
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-1-mask.jpg"), imgMasked)
     
     # birds-eye
-    topDown = UtilMask.topDown(imgUD)
+    topDown = perspective.topDown(imgUD)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2-topdwn.jpg"), topDown)
     
@@ -34,12 +35,15 @@ def imagePipeline(image, fileName=None):
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-3-mask.jpg"), imgTopMasked)
     
     topBinary = UtilMask.binaryImg(imgTopMasked)
-    searched  = UtilLines.blindSearch(topBinary)
+    lanelines = UtilLines.LaneLines()
+    searched  = lanelines.blindSearch(topBinary)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-4-search.jpg"), searched)
     
+    laneFill = lanelines.getLaneFill(topBinary, perspective)    
+    
     # combine for final result
-    imgFinal = UtilMask.weighted_img(imgMasked, imgUD)
+    imgFinal = UtilMask.weighted_img(laneFill, imgUD, α=0.8, β=0.3)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-5-final.jpg"), imgFinal)
     
