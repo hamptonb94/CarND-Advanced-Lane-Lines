@@ -7,6 +7,9 @@ xm_per_pix = 3.7/700 # meters per pixel in x dimension
 
 
 class LaneLines:
+    def __init__(self):
+        self.fontFace  = cv2.FONT_HERSHEY_SIMPLEX
+        self.fontColor = (255, 255, 255)
     
     def getLaneFill(self, binary_warped, perspective):
         # Create an image to draw the lines on
@@ -24,6 +27,12 @@ class LaneLines:
         # Warp the blank back to original image space
         newwarp = perspective.topDownInv(color_warp)
         return newwarp
+    
+    def addLaneInfo(self, image):
+        cv2.putText(image, 'Curvature radius  : {:8.1f}m'.format(self.curve_radius), (20,  60), self.fontFace, 1.5, self.fontColor, 2)
+        cv2.putText(image, 'Offset from center: {:4.1f}m'.format(self.laneOffset  ), (20, 110), self.fontFace, 1.5, self.fontColor, 2)
+        return
+
     
     def blindSearch(self, binary_warped):
         # Assuming you have created a warped binary image called "binary_warped"
@@ -123,8 +132,8 @@ class LaneLines:
     
         # calculate weighted average
         curveTot = lft_curverad*len(lftx) + rgt_curverad*len(rgtx)
-        curve_radius = curveTot/(len(lftx) + len(rgtx))
+        self.curve_radius = curveTot/(len(lftx) + len(rgtx))
         
-        print("  --  Avg Radius = {0:8.1f} m,  Lane Width = {1:.1f} m,   Lane Offset = {2:.1f} m".format(curve_radius, self.laneWidth, self.laneOffset))
+        print("  --  Avg Radius = {0:8.1f} m,  Lane Width = {1:.1f} m,   Lane Offset = {2:.1f} m".format(self.curve_radius, self.laneWidth, self.laneOffset))
     
         return out_img

@@ -47,6 +47,10 @@ def imagePipeline(image, fileName=None):
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-5-final.jpg"), imgFinal)
     
+    lanelines.addLaneInfo(imgFinal)
+    if fileName:
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-6-annot.jpg"), imgFinal)
+        
     return imgFinal
     
 
