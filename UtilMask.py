@@ -67,12 +67,12 @@ class Perspective:
         self.shape = (width, height)
         
         # staring points
-        tops1 = [[550, 450], [ 730, 450] ] # top    left,right
+        tops1 = [[476, 480], [ 796, 480] ] # top    left,right
         bots1 = [[  0, 680], [1280, 680] ] # bottom left,right
         
         # new point location in top-down image
-        tops2 = [[275, 0],      [1005, 0]      ] # top    left,right
-        bots2 = [[275, height], [1005, height] ] # bottom left,right
+        tops2 = [[238, 0],      [1038, 0]      ] # top    left,right
+        bots2 = [[238, height], [1038, height] ] # bottom left,right
         
         # define transform matrix
         source = np.float32([tops1[0], tops1[1], bots1[1], bots1[0]]) # circular order
