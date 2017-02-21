@@ -11,6 +11,7 @@ import UtilLines
 
 cam = UtilCamera.Camera()
 perspective = UtilMask.Perspective()
+laneLines = UtilLines.LaneLines()
 
 def imagePipeline(image, fileName=None):
     if fileName:
@@ -35,19 +36,18 @@ def imagePipeline(image, fileName=None):
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-3-mask.jpg"), imgTopMasked)
     
     topBinary = UtilMask.binaryImg(imgTopMasked)
-    lanelines = UtilLines.LaneLines()
-    searched  = lanelines.blindSearch(topBinary)
+    searched  = laneLines.processFrame(topBinary)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-4-search.jpg"), searched)
     
-    laneFill = lanelines.getLaneFill(topBinary, perspective)    
+    laneFill = laneLines.getLaneFill(topBinary, perspective)    
     
     # combine for final result
     imgFinal = UtilMask.weighted_img(laneFill, imgUD, α=0.8, β=0.3)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-5-final.jpg"), imgFinal)
     
-    lanelines.addLaneInfo(imgFinal)
+    laneLines.addLaneInfo(imgFinal)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-6-annot.jpg"), imgFinal)
         
@@ -65,6 +65,7 @@ def makeNewDir(dir):
 
 
 def processImages():
+    global laneLines
     makeNewDir("test_images/outputs/")
     fileNames = os.listdir("test_images/")
     for fileName in fileNames:
@@ -73,17 +74,21 @@ def processImages():
         print("Processing: ", fileName)
         fullName = os.path.join("test_images",fileName)
         image = mpimg.imread(fullName)
+        laneLines = UtilLines.LaneLines() # reset lane lines for test images
         imagePipeline(image, fileName)
         
 from moviepy.editor import VideoFileClip
 
-def processMovie1():
-    print("Movie 1")
-    white_output = 'video_output.mp4'
-    clip1 = VideoFileClip("challenge_video.mp4")
-    white_clip = clip1.fl_image(imagePipeline) #NOTE: this function expects color images!!
-    white_clip.write_videofile(white_output, audio=False)
+def processMovie(movieName):
+    base = movieName.split('.')[0]
+    outputName = base + '-out.mp4'
+    clip1 = VideoFileClip(movieName)
+    out_clip = clip1.fl_image(imagePipeline) #NOTE: this function expects color images!!
+    out_clip.write_videofile(outputName, audio=False)
 
-
-processImages()
-#processMovie1()
+import sys
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        processMovie(sys.argv[1])
+    else:
+        processImages()
