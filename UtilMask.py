@@ -121,7 +121,8 @@ def maskPipeline(image, ksize=5, \
                     abs_thresh=(50, 200), \
                     mag_thresh=(80, 200), \
                     dir_thresh=(0.7, 1.3), \
-                    h_thresh  =(15, 30)):
+                    h_thresh  =(15, 30), \
+                    l_thresh  = 210):
     
     """Compute total image mask based on Sobel gradients and color values"""
     
@@ -160,10 +161,10 @@ def maskPipeline(image, ksize=5, \
     h_channel = hls[:,:,0]
     l_channel = hls[:,:,1]
     s_channel = hls[:,:,2]
-    #print(hls[515,930,:])
+    #print(hls[56,876,:])
     mask_color = np.zeros_like(s_channel, dtype=np.uint8)
     mask_color[(h_channel >= h_thresh[0]) & (h_channel <= h_thresh[1]) & (l_channel > 130) & (l_channel < 180) & (s_channel > 100)] = 255
-    mask_color[(l_channel > 210)] = 255
+    mask_color[(l_channel > l_thresh)] = 255
     
     combined = np.zeros_like(mask_dir, dtype=np.uint8)
     combined[((abs_mask_x == 1) & (abs_mask_y == 1)) | ((mag_mask == 1) & (mask_dir == 1))] = 255
