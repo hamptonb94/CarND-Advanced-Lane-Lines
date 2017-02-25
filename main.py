@@ -30,17 +30,12 @@ def imagePipeline(image, fileName=None):
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2-topdwn.jpg"), topDown)
     
-    # masking
-    imgTopMasked = UtilMask.maskPipeline(topDown)
-    if fileName:
-        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-3-mask.jpg"), imgTopMasked)
-    
-    topBinary = UtilMask.binaryImg(imgTopMasked)
-    searched  = laneLines.processFrame(topBinary)
+    # lane pipeline
+    searched  = laneLines.processFrame(topDown, fileName)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-4-search.jpg"), searched)
     
-    laneFill = laneLines.getLaneFill(topBinary, perspective)    
+    laneFill = laneLines.getLaneFill(perspective)    
     
     # combine for final result
     imgFinal = UtilMask.weighted_img(laneFill, imgUD, α=0.8, β=0.3)
@@ -80,8 +75,7 @@ def processImages():
 from moviepy.editor import VideoFileClip
 
 def processMovie(movieName):
-    base = movieName.split('.')[0]
-    outputName = base + '-out.mp4'
+    outputName = 'out-'+movieName
     clip1 = VideoFileClip(movieName)
     out_clip = clip1.fl_image(imagePipeline) #NOTE: this function expects color images!!
     out_clip.write_videofile(outputName, audio=False)

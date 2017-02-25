@@ -1,6 +1,9 @@
+import os
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import UtilMask
 
 ym_per_pix = 15/720 # meters per pixel in y dimension
 xm_per_pix = 3.7/700 # meters per pixel in x dimension
@@ -12,7 +15,14 @@ class LaneLines:
         self.fontColor = (255, 255, 255)
         self.detected = False
     
-    def processFrame(self, binaryTopDown):
+    def processFrame(self, topDown, fileName = None):
+        # mask image
+        imgTopMasked = UtilMask.maskPipeline(topDown)
+        if fileName:
+            mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-3-mask.jpg"), imgTopMasked)
+        # compute binary image
+        binaryTopDown = UtilMask.binaryImg(imgTopMasked)
+        
         # Create an output image to draw on and  visualize the result
         out_img = np.dstack((binaryTopDown, binaryTopDown, binaryTopDown))*255
         self.imgShape = binaryTopDown.shape
@@ -20,16 +30,27 @@ class LaneLines:
         if not self.detected:
             self.blindSearch(binaryTopDown, out_img)
         else:
-            self.updateLanes(binaryTopDown)
+            found = self.updateLanes(binaryTopDown)
+            if not found:
+                self.blindSearch(binaryTopDown, out_img)
         
-        self.fitLines()
+        # if not enough pixels in left or right, re-mask with wider gates
+        if len(self.nonzerox[self.lft_lane_inds]) < 300 or  len(self.nonzerox[self.rgt_lane_inds]) < 100:
+            imgTopMasked = UtilMask.maskPipeline(topDown, l_thresh=180)
+            binaryTopDown = UtilMask.binaryImg(imgTopMasked)
+            out_img = np.dstack((binaryTopDown, binaryTopDown, binaryTopDown))*255
+            self.blindSearch(binaryTopDown, out_img)
+        
+        if len(self.nonzerox[self.lft_lane_inds]) > 150 and  len(self.nonzerox[self.rgt_lane_inds]) > 150:
+            self.fitLines()
+        
         self.highlightLinePoints(out_img)
         return out_img
         
     
-    def getLaneFill(self, binary_warped, perspective):
+    def getLaneFill(self, perspective):
         # Create an image to draw the lines on
-        warp_zero  = np.zeros_like(binary_warped).astype(np.uint8)
+        warp_zero  = np.zeros(self.imgShape).astype(np.uint8)
         color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
         # Recast the x and y points into usable format for cv2.fillPoly()
@@ -114,18 +135,29 @@ class LaneLines:
         # from the next frame of video (also called "binary_warped")
         # It's now much easier to find line pixels!
         nonzero  = binary_warped.nonzero()
-        self.nonzeroy = np.array(nonzero[0])
-        self.nonzerox = np.array(nonzero[1])
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
         margin = 100
         LFit = self.lft_fit
         RFit = self.rgt_fit
-        self.lft_lane_inds = ((self.nonzerox > (LFit[0]*(self.nonzeroy**2) + LFit[1]*self.nonzeroy + LFit[2] - margin)) & (self.nonzerox < (LFit[0]*(self.nonzeroy**2) + LFit[1]*self.nonzeroy + LFit[2] + margin)))
-        self.rgt_lane_inds = ((self.nonzerox > (RFit[0]*(self.nonzeroy**2) + RFit[1]*self.nonzeroy + RFit[2] - margin)) & (self.nonzerox < (RFit[0]*(self.nonzeroy**2) + RFit[1]*self.nonzeroy + RFit[2] + margin)))
-        #print("Update", len(self.lft_lane_inds), len(self.rgt_lane_inds))
-        return
+        lft_lane_inds = ((nonzerox > (LFit[0]*(nonzeroy**2) + LFit[1]*nonzeroy + LFit[2] - margin)) & (nonzerox < (LFit[0]*(nonzeroy**2) + LFit[1]*nonzeroy + LFit[2] + margin)))
+        rgt_lane_inds = ((nonzerox > (RFit[0]*(nonzeroy**2) + RFit[1]*nonzeroy + RFit[2] - margin)) & (nonzerox < (RFit[0]*(nonzeroy**2) + RFit[1]*nonzeroy + RFit[2] + margin)))
+        
+        if lft_lane_inds.size == 0 or rgt_lane_inds.size == 0:
+            # update lost the lines, lets do blind search
+            self.detected = False
+            return False
+        else:
+            self.nonzeroy = nonzeroy
+            self.nonzerox = nonzerox
+            self.lft_lane_inds = lft_lane_inds
+            self.rgt_lane_inds = rgt_lane_inds
+            #print("Update", len(self.nonzerox[self.lft_lane_inds]), len(self.nonzerox[self.rgt_lane_inds]))
+        return True
     
     def fitLines(self):
         if self.lft_lane_inds.size == 0 or self.rgt_lane_inds.size == 0:
+            self.detected = False
             return
         
         # Extract left and right line pixel positions
