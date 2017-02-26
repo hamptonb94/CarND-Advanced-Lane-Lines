@@ -6,10 +6,14 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 class Perspective:
+    """Class to memorize a top-down perspective transform and apply it when needed."""
     def __init__(self):
         self.isSetup = False
     
     def calcTransform(self, image):
+        """On the very first use of this class, this function will generate the 
+            perspective transform and save it for future use.
+        """
         width  = image.shape[1] # x
         height = image.shape[0] # y
         self.shape = (width, height)

@@ -9,27 +9,33 @@ import UtilCamera
 import UtilMask
 import UtilLines
 
-cam = UtilCamera.Camera()
+camera      = UtilCamera.Camera()
 perspective = UtilMask.Perspective()
-laneLines = UtilLines.LaneLines()
+laneLines   = UtilLines.LaneLines()
 
 def imagePipeline(image, fileName=None):
+    """Complete process for each frame image.  If 'fileName' is given then each stage
+        of the pipeline will write out an image for debugging.
+    """
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName), image)
     
-    imgUD = cam.undistort(image)
+    # use camera to un-distort raw frames
+    imgUD = camera.undistort(image)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-0-udist.jpg"), imgUD)
     
+    # generate mask from gradients/colors
     imgMasked = UtilMask.maskPipeline(image)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-1-mask.jpg"), imgMasked)
     
-    # birds-eye
+    # change to birds-eye view
     topDown = perspective.topDown(imgUD)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2-topdwn.jpg"), topDown)
     
+    # output test of perspective to make sure lines are parallel
     if fileName:
         withLines, topDownWithLines = perspective.testTransform(imgUD)
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2a-topdwn2.jpg"), withLines)
@@ -40,6 +46,7 @@ def imagePipeline(image, fileName=None):
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-4-search.jpg"), searched)
     
+    # get the green safe region
     laneFill = laneLines.getLaneFill(perspective)    
     
     # combine for final result
@@ -47,6 +54,7 @@ def imagePipeline(image, fileName=None):
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-5-final.jpg"), imgFinal)
     
+    # also add a test overlay for curvature and car location
     laneLines.addLaneInfo(imgFinal)
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-6-annot.jpg"), imgFinal)
@@ -87,6 +95,10 @@ def processMovie(movieName):
 
 import sys
 if __name__ == '__main__':
+    """Main processing script.
+        If no arguments given, it will process all images in the test_images folder.  
+        A single argument is the name of a movie to process.
+    """
     if len(sys.argv) > 1:
         processMovie(sys.argv[1])
     else:

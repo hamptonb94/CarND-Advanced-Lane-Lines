@@ -10,12 +10,14 @@ xm_per_pix = 3.7/700 # meters per pixel in x dimension
 
 
 class LaneLines:
+    """Class to compute lane lines on frames of film."""
     def __init__(self):
         self.fontFace  = cv2.FONT_HERSHEY_SIMPLEX
         self.fontColor = (255, 255, 255)
         self.detected = False
     
     def processFrame(self, topDown, fileName = None):
+        """This is the main line finding pipeline function"""
         # mask image
         imgTopMasked = UtilMask.maskPipeline(topDown)
         if fileName:
@@ -49,6 +51,8 @@ class LaneLines:
         
     
     def getLaneFill(self, perspective):
+        """Use the given perspective and project a green "safe" lane area onto a blank image"""
+        
         # Create an image to draw the lines on
         warp_zero  = np.zeros(self.imgShape).astype(np.uint8)
         color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
@@ -66,12 +70,14 @@ class LaneLines:
         return newwarp
     
     def addLaneInfo(self, image):
+        """Add annotations for lane curvature and car location"""
         cv2.putText(image, 'Curvature radius  : {:5.2f} km'.format(self.curveRadKm), (20,  60), self.fontFace, 1.5, self.fontColor, 2)
         cv2.putText(image, 'Offset from center: {:5.2f} m '.format(self.laneOffset  ), (20, 110), self.fontFace, 1.5, self.fontColor, 2)
         return
 
     
     def blindSearch(self, binary_warped, out_img):
+        """This function was taken from the lecture notes. Small adaptations to fit my pipeline"""
         # Assuming you have created a warped binary image called "binary_warped"
         # Take a histogram of the bottom half of the image
         histogram = np.sum(binary_warped[self.imgShape[0]/2:,:], axis=0)
@@ -131,6 +137,7 @@ class LaneLines:
         return out_img
     
     def updateLanes(self, binary_warped):
+        """This function was taken from the lecture notes.  Small adaptations to fit my pipeline"""
         # Assume you now have a new warped binary image 
         # from the next frame of video (also called "binary_warped")
         # It's now much easier to find line pixels!
@@ -156,6 +163,9 @@ class LaneLines:
         return True
     
     def fitLines(self):
+        """Take raw left and right pixels and fit lines to them.  Also compute car location
+        and lane curvature.  Most of this taken from class notes."""
+        
         if self.lft_lane_inds.size == 0 or self.rgt_lane_inds.size == 0:
             self.detected = False
             return
@@ -209,6 +219,7 @@ class LaneLines:
         return
     
     def highlightLinePoints(self, out_img):
+        """For debugging, we color the left and right lane raw pixels, and draw the curve fit."""
         out_img[self.nonzeroy[self.lft_lane_inds], self.nonzerox[self.lft_lane_inds]] = [255, 0, 0]
         out_img[self.nonzeroy[self.rgt_lane_inds], self.nonzerox[self.rgt_lane_inds]] = [0, 0, 255]
         

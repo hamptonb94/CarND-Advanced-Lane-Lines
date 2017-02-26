@@ -8,7 +8,12 @@ import matplotlib.pyplot as plt
 CALIBRATION_FILE = 'camera_calibration.p'
 
 class Camera:
+    """Class to calibrate camera, and undistort images"""
+    
     def __init__(self):
+        """If the calibration file is present, load calibration.  Otherwise use 
+            camera calibration images from camera_cal/ to compute calibration.
+        """
         if os.path.isfile(CALIBRATION_FILE):
             # load calibration
             cam_pickle = pickle.load(open(CALIBRATION_FILE, "rb"))
