@@ -179,6 +179,10 @@ class LaneLines:
         self.lft_fitx = self.lft_fit[0]*self.ploty**2 + self.lft_fit[1]*self.ploty + self.lft_fit[2]
         self.rgt_fitx = self.rgt_fit[0]*self.ploty**2 + self.rgt_fit[1]*self.ploty + self.rgt_fit[2]
         
+        # generate lines
+        self.lftLine = np.int32(np.stack([self.lft_fitx, self.ploty], axis=1))
+        self.rgtLine = np.int32(np.stack([self.rgt_fitx, self.ploty], axis=1))
+        
         midPointPx   = 1280.0/2.0
         laneWidthPx  = self.rgt_fitx[-1] - self.lft_fitx[-1]
         laneCenterPx = self.lft_fitx[-1] + laneWidthPx/2.0
@@ -207,6 +211,8 @@ class LaneLines:
     def highlightLinePoints(self, out_img):
         out_img[self.nonzeroy[self.lft_lane_inds], self.nonzerox[self.lft_lane_inds]] = [255, 0, 0]
         out_img[self.nonzeroy[self.rgt_lane_inds], self.nonzerox[self.rgt_lane_inds]] = [0, 0, 255]
+        
+        cv2.polylines(out_img, [self.lftLine, self.rgtLine], False, (255,255,255), thickness=1)
         return out_img
     
     
