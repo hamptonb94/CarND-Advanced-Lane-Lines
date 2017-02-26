@@ -75,11 +75,11 @@ class Perspective:
         bots2 = [[238, height], [1038, height] ] # bottom left,right
         
         # define transform matrix
-        source = np.float32([tops1[0], tops1[1], bots1[1], bots1[0]]) # circular order
-        dest   = np.float32([tops2[0], tops2[1], bots2[1], bots2[0]]) # circular order
+        self.source = np.float32([tops1[0], tops1[1], bots1[1], bots1[0]]) # circular order
+        self.dest   = np.float32([tops2[0], tops2[1], bots2[1], bots2[0]]) # circular order
     
-        self.warpMat    = cv2.getPerspectiveTransform(source, dest)
-        self.warpMatInv = cv2.getPerspectiveTransform(dest,   source)
+        self.warpMat    = cv2.getPerspectiveTransform(self.source, self.dest)
+        self.warpMatInv = cv2.getPerspectiveTransform(self.dest,   self.source)
         self.isSetup = True
     
     def topDown(self, image):
@@ -96,6 +96,16 @@ class Perspective:
         topDownImgInv = cv2.warpPerspective(image, self.warpMatInv, self.shape, flags=cv2.INTER_LINEAR)
         return topDownImgInv
     
+    def testTransform(self, image):
+        if not self.isSetup:
+            self.calcTransform(image)
+        
+        withLines = image.copy()
+        cv2.polylines(withLines, [np.int32(self.source)], True,(255,55,255), thickness=2)
+        
+        topDownWithLines = cv2.warpPerspective(withLines, self.warpMat, self.shape, flags=cv2.INTER_LINEAR)
+        return withLines, topDownWithLines
+        
 
 def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """

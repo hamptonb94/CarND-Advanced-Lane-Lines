@@ -30,6 +30,11 @@ def imagePipeline(image, fileName=None):
     if fileName:
         mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2-topdwn.jpg"), topDown)
     
+    if fileName:
+        withLines, topDownWithLines = perspective.testTransform(imgUD)
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2a-topdwn2.jpg"), withLines)
+        mpimg.imsave(os.path.join("test_images/outputs/", fileName+"-2b-topdwn3.jpg"), topDownWithLines)
+    
     # lane pipeline
     searched  = laneLines.processFrame(topDown, fileName)
     if fileName:
