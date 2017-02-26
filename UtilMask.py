@@ -5,58 +5,6 @@ import glob
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-# Define constants for region masking images
-LANE_TOP = 330.
-LANE_BOT =  56.
-INSET_LT = 150.
-INSET_RT =  50.
-INSET_MI = 420.
-
-LANE_TOP_R = LANE_TOP/540
-LANE_BOT_R = LANE_BOT/720
-INSET_LT_R = INSET_LT/960
-INSET_RT_R = INSET_RT/960
-INSET_MI_R = INSET_MI/960
-
-def region_of_interest(img):
-    """
-    Applies an image mask.
-    
-    Only keeps the region of the image defined by the polygon
-    formed from `vertices`. The rest of the image is set to black.
-    """
-    width  = img.shape[1] # x
-    height = img.shape[0] # y
-    
-    insetTOP= int(LANE_TOP_R * height)
-    insetBOT= int(LANE_BOT_R * height)
-    insetLT = int(INSET_LT_R * width)
-    insetRT = int(INSET_RT_R * width)
-    insetMI = int(INSET_MI_R * width)
-    
-    botLeft = (insetLT,height-insetBOT)
-    topLeft = (insetMI,insetTOP)
-    topRight= (width-insetMI,insetTOP)
-    botRight= (width-insetRT,height-insetBOT)
-    vertices = np.array([[botLeft, topLeft, topRight, botRight]], dtype=np.int32)
-    
-    #defining a blank mask to start with
-    mask = np.zeros_like(img)   
-    
-    #defining a 3 channel or 1 channel color to fill the mask with depending on the input image
-    if len(img.shape) > 2:
-        channel_count = img.shape[2]  # i.e. 3 or 4 depending on your image
-        ignore_mask_color = (255,) * channel_count
-    else:
-        ignore_mask_color = 255
-        
-    #filling pixels inside the polygon defined by "vertices" with the fill color    
-    cv2.fillPoly(mask, vertices, ignore_mask_color)
-    
-    #returning the image only where mask pixels are nonzero
-    masked_image = cv2.bitwise_and(img, mask)
-    return masked_image
-
 class Perspective:
     def __init__(self):
         self.isSetup = False
@@ -181,9 +129,7 @@ def maskPipeline(image, ksize=5, \
     
     # mash everything together
     color_binary = np.dstack(( np.zeros_like(combined), combined, mask_color))
-    
-    #masked = region_of_interest(color_binary)
-    
+        
     return color_binary
     
 
